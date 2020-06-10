@@ -3,6 +3,9 @@ from django.shortcuts import render,redirect
 from .models import UserInfo
 from hashlib import sha1
 from django.http import JsonResponse, HttpResponseRedirect
+from . import user_decorator
+from df_goods.models import GoodInfo
+
 
 # 注册视图
 def register(request):
@@ -52,13 +55,14 @@ def login_handle(request):
     jizhu= post.get('jizhu',0)
     # 根据用户名查询对象,user为[[],[]]
     users = UserInfo.objects.filter(uname=uname)
-    print(uname)
     # 判断: 未查到用户名，返回错误；查到用户名，则判断密码是否正确，正确立即转到用户中心
     if len(users)==1:
         s1 = sha1()
         s1.update(upwd.encode('utf8'))
         if s1.hexdigest()==users[0].upwd:
-            red = HttpResponseRedirect('/user/info/')
+            # 验证登录后返回原来的浏览页面
+            url = request.COOKIES.get('url','/')
+            red = HttpResponseRedirect(url)
             # 记住用户名
             if jizhu!=0:
                 red.set_cookie('uname',uname)
@@ -76,17 +80,37 @@ def login_handle(request):
                    'uname': uname,'upwd':upwd}
         return render(request,'df_user/login.html',context)
 
+def logout(request):
+    request.session.flush()
+    return redirect("/")
+
+
+@user_decorator.login
 def info(request):
     user_email = UserInfo.objects.get(id=request.session['user_id']).uemail
+    # 最近浏览
+    goods_ids = request.COOKIES.get('goods_ids','')
+    goods_ids1=goods_ids.split(',')
+    print(goods_ids1)
+    goods_list=[]
+    if len(goods_ids):
+        for goods_id in goods_ids1:
+            goods_list.append(GoodInfo.objects.get(id=int(goods_id)))
+
     context= {'title':'用户中心',
               'user_email':user_email,
-              'user_name':request.session['user_name']}
+              'user_name':request.session['user_name'],
+              'page_name':1,
+              'goods_list':goods_list}
+
     return render(request,'df_user/user_center_info.html',context)
 
+@user_decorator.login
 def order(request):
     context = {'title':'用户中心'}
     return render(request,'df_user/user_center_order.html',context)
 
+@user_decorator.login
 def site(request):
     user = UserInfo.objects.get(id=request.session['user_id'])
     if request.method=='POST':
@@ -96,7 +120,8 @@ def site(request):
         user.uyoubian = post.get('uyoubian')
         user.phone = post.get('uphone')
         user.save()
-    context={'title':'用户中心','user':user}
+    context={'title':'用户中心','user':user,
+             'page_name':1}
     return render(request,'df_user/user_center_site.html',context)
 
 

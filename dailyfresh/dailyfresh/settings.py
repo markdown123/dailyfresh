@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'df_user',
+    'df_goods',
+    'df_cart',
+    'df_order',
+    'tinymce',
 ]
 
 MIDDLEWARE = [
@@ -130,4 +134,13 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR,'static')
 ]
 
+# 开发阶段上传目录
+MEDIA_ROOT =os.path.join(BASE_DIR,'static')
+# 布署阶段上传目录
+# MEDIA_ROOT ='/var/www/dailyfresh/static'
 
+TINYMCE_DEFAULT_CONFIG = {
+    'theme': 'silver',
+    'width': 600,
+    'height': 400,
+}
