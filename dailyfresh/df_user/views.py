@@ -118,7 +118,7 @@ def site(request):
         user.ushou=post.get('ushou')
         user.uaddress = post.get('uaddress')
         user.uyoubian = post.get('uyoubian')
-        user.phone = post.get('uphone')
+        user.uphone = post.get('uphone')
         user.save()
     context={'title':'用户中心','user':user,
              'page_name':1}
